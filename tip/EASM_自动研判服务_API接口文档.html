@@ -1,0 +1,1246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>EASM 自动研判服务 API 接口文档</title>
+  <style>
+    :root {
+      --bg: #f3f6fb;
+      --surface: #ffffff;
+      --surface-soft: #f8fafc;
+      --text: #172033;
+      --muted: #5f6b7a;
+      --border: #dfe6ef;
+      --primary: #2463eb;
+      --primary-soft: #eaf1ff;
+      --navy: #0f1e36;
+      --green: #087f5b;
+      --green-soft: #e7f7f1;
+      --amber: #a75d00;
+      --amber-soft: #fff4dc;
+      --red: #b42318;
+      --red-soft: #ffebe9;
+      --purple: #7048c8;
+      --code-bg: #111b2d;
+      --code-text: #e7edf7;
+      --shadow: 0 8px 28px rgba(20, 40, 80, 0.08);
+      --radius: 14px;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      color: var(--text);
+      background: var(--bg);
+      font: 15px/1.72 -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+        "Microsoft YaHei", Arial, sans-serif;
+    }
+    a { color: var(--primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code, pre {
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    }
+    code:not(pre code) {
+      padding: 2px 6px;
+      color: #174ea6;
+      background: #edf3ff;
+      border: 1px solid #dce7ff;
+      border-radius: 5px;
+      font-size: 0.92em;
+    }
+
+    .hero {
+      color: #fff;
+      background:
+        radial-gradient(circle at 82% 18%, rgba(58, 130, 246, 0.30), transparent 30%),
+        linear-gradient(135deg, #0e1a30 0%, #142b50 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.12);
+    }
+    .hero-inner {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 56px 32px 48px;
+    }
+    .eyebrow {
+      margin: 0 0 8px;
+      color: #9fc0ff;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+    }
+    h1 {
+      margin: 0;
+      font-size: clamp(30px, 4vw, 46px);
+      line-height: 1.22;
+      letter-spacing: -0.02em;
+    }
+    .hero-desc {
+      max-width: 780px;
+      margin: 15px 0 0;
+      color: #d2dced;
+      font-size: 17px;
+    }
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 24px;
+    }
+    .meta-pill {
+      padding: 6px 11px;
+      color: #dce7fb;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      border-radius: 999px;
+      font-size: 13px;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 260px minmax(0, 1fr);
+      gap: 30px;
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 30px 32px 72px;
+    }
+    .sidebar {
+      position: sticky;
+      top: 20px;
+      align-self: start;
+      max-height: calc(100vh - 40px);
+      overflow: auto;
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.86);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      backdrop-filter: blur(10px);
+    }
+    .sidebar-title {
+      margin: 2px 10px 9px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .sidebar a {
+      display: block;
+      padding: 7px 10px;
+      color: #344054;
+      border-radius: 7px;
+      font-size: 14px;
+    }
+    .sidebar a:hover {
+      color: var(--primary);
+      background: var(--primary-soft);
+      text-decoration: none;
+    }
+    .sidebar .sub { padding-left: 22px; font-size: 13px; }
+    .sidebar .sep {
+      height: 1px;
+      margin: 10px 8px;
+      background: var(--border);
+    }
+
+    main { min-width: 0; }
+    section {
+      scroll-margin-top: 22px;
+      margin-bottom: 28px;
+      padding: 28px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+    }
+    h2 {
+      margin: 0 0 18px;
+      font-size: 25px;
+      line-height: 1.35;
+      letter-spacing: -0.01em;
+    }
+    h3 {
+      margin: 28px 0 12px;
+      font-size: 19px;
+      line-height: 1.45;
+    }
+    h4 { margin: 22px 0 9px; font-size: 16px; }
+    p { margin: 10px 0; }
+    ul, ol { margin: 10px 0; padding-left: 24px; }
+    li + li { margin-top: 5px; }
+
+    .lead {
+      color: #344054;
+      font-size: 16px;
+    }
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+    .summary-card {
+      padding: 17px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .summary-card strong { display: block; margin-bottom: 4px; }
+    .summary-card p { margin: 0; color: var(--muted); }
+
+    .callout {
+      margin: 16px 0;
+      padding: 14px 16px;
+      border-left: 4px solid var(--primary);
+      border-radius: 8px;
+      background: var(--primary-soft);
+    }
+    .callout strong { display: block; margin-bottom: 3px; }
+    .callout p { margin: 3px 0 0; }
+    .callout.warn { border-left-color: var(--amber); background: var(--amber-soft); }
+    .callout.danger { border-left-color: var(--red); background: var(--red-soft); }
+    .callout.success { border-left-color: var(--green); background: var(--green-soft); }
+
+    .flow {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin: 18px 0;
+      counter-reset: step;
+    }
+    .flow-step {
+      position: relative;
+      min-height: 112px;
+      padding: 40px 14px 14px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .flow-step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      top: 12px;
+      left: 14px;
+      display: grid;
+      width: 22px;
+      height: 22px;
+      place-items: center;
+      color: #fff;
+      background: var(--primary);
+      border-radius: 50%;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .flow-step strong { display: block; margin-bottom: 4px; }
+    .flow-step span { color: var(--muted); font-size: 13px; }
+
+    .endpoint {
+      scroll-margin-top: 22px;
+      margin-top: 24px;
+      padding-top: 24px;
+      border-top: 1px solid var(--border);
+    }
+    .endpoint:first-of-type { margin-top: 8px; }
+    .endpoint-title {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 12px;
+    }
+    .endpoint-title h3 { margin: 0; }
+    .method {
+      min-width: 52px;
+      padding: 4px 9px;
+      color: #fff;
+      border-radius: 6px;
+      text-align: center;
+      font: 800 12px/1.4 "SFMono-Regular", Consolas, monospace;
+      letter-spacing: 0.04em;
+    }
+    .method.get { background: var(--green); }
+    .method.post { background: var(--purple); }
+    .path {
+      padding: 5px 9px;
+      color: #172033;
+      background: #edf1f6;
+      border: 1px solid #dbe2eb;
+      border-radius: 6px;
+      font: 700 13px/1.4 "SFMono-Regular", Consolas, monospace;
+    }
+    .auth-tag {
+      padding: 3px 8px;
+      color: #7a4600;
+      background: var(--amber-soft);
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .no-auth { color: #087f5b; background: var(--green-soft); }
+
+    .table-wrap {
+      overflow-x: auto;
+      margin: 14px 0;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      background: #fff;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--border);
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      color: #344054;
+      background: #f6f8fb;
+      font-weight: 750;
+      white-space: nowrap;
+    }
+    tr:last-child td { border-bottom: 0; }
+    td code { white-space: nowrap; }
+
+    .code-wrap { position: relative; margin: 13px 0; }
+    pre {
+      margin: 0;
+      padding: 18px 20px;
+      overflow: auto;
+      color: var(--code-text);
+      background: var(--code-bg);
+      border: 1px solid #24334e;
+      border-radius: 10px;
+      font-size: 13px;
+      line-height: 1.62;
+      tab-size: 4;
+    }
+    pre code { color: inherit; background: transparent; }
+    .copy-button {
+      position: absolute;
+      top: 9px;
+      right: 9px;
+      padding: 5px 9px;
+      color: #d8e2f1;
+      background: #24334e;
+      border: 1px solid #3a4b68;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    .copy-button:hover { background: #314565; }
+
+    .field-group {
+      margin-top: 18px;
+      padding: 15px 16px;
+      background: var(--surface-soft);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+    }
+    .field-group h4 { margin-top: 0; }
+    .status {
+      display: inline-block;
+      min-width: 42px;
+      padding: 2px 7px;
+      border-radius: 999px;
+      text-align: center;
+      font-size: 12px;
+      font-weight: 800;
+    }
+    .s2xx { color: #087f5b; background: var(--green-soft); }
+    .s4xx { color: #9a5700; background: var(--amber-soft); }
+    .s5xx { color: var(--red); background: var(--red-soft); }
+
+    .footer {
+      max-width: 1280px;
+      margin: 0 auto;
+      padding: 0 32px 42px;
+      color: var(--muted);
+      text-align: center;
+      font-size: 13px;
+    }
+
+    @media (max-width: 960px) {
+      .layout { grid-template-columns: 1fr; padding: 22px 18px 56px; }
+      .sidebar { position: static; max-height: none; }
+      .hero-inner { padding: 42px 20px 38px; }
+      .flow { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    @media (max-width: 640px) {
+      section { padding: 21px 17px; }
+      .grid-2, .flow { grid-template-columns: 1fr; }
+      .path { overflow-wrap: anywhere; }
+      th, td { padding: 9px 10px; }
+    }
+    @media print {
+      body { background: #fff; }
+      .hero { color: #000; background: #fff; border-bottom: 2px solid #000; }
+      .hero-desc, .eyebrow, .meta-pill { color: #333; }
+      .layout { display: block; max-width: none; padding: 20px 0; }
+      .sidebar, .copy-button { display: none; }
+      section { break-inside: avoid; box-shadow: none; }
+      .endpoint { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <header class="hero">
+    <div class="hero-inner">
+      <p class="eyebrow">Downstream REST API</p>
+      <h1>EASM 自动研判服务 API 接口文档</h1>
+      <p class="hero-desc">供下游系统查询已经完成下载、研判并落库的 EASM 报告、统计结果和逐条研判记录。</p>
+      <div class="meta-row">
+        <span class="meta-pill">文档版本：v1.1（整理版）</span>
+        <span class="meta-pill">适用服务版本：0.1.0</span>
+        <span class="meta-pill">协议：HTTP / JSON</span>
+        <span class="meta-pill">示例语言：Python 3 + requests</span>
+        <span class="meta-pill">更新日期：2026-09-02</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="sidebar" aria-label="文档目录">
+      <p class="sidebar-title">目录</p>
+      <a href="#overview">1. 服务概述</a>
+      <a href="#quick-start">2. 快速接入</a>
+      <a href="#workflow">3. 推荐调用流程</a>
+      <a href="#conventions">4. 公共约定</a>
+      <a href="#endpoints">5. 接口总览</a>
+      <a class="sub" href="#health">5.1 健康检查</a>
+      <a class="sub" href="#report-list">5.2 报告列表</a>
+      <a class="sub" href="#report-detail">5.3 报告概要</a>
+      <a class="sub" href="#records">5.4 研判明细</a>
+      <a class="sub" href="#stats">5.5 报告统计</a>
+      <a class="sub" href="#poll-now">5.6 立即轮询</a>
+      <a href="#data-model">6. 字段说明</a>
+      <a href="#errors">7. 错误处理</a>
+      <a href="#sync">8. 同步与幂等</a>
+      <a href="#complete-example">9. 完整 Python 示例</a>
+      <a href="#security">10. 安全与限制</a>
+      <div class="sep"></div>
+      <a href="#openapi">OpenAPI 文档入口</a>
+    </nav>
+
+    <main>
+      <section id="overview">
+        <h2>1. 服务概述</h2>
+        <p class="lead">本服务位于 EASM 平台与下游系统之间：它从 EASM 获取导出成功的 Excel 报告，完成自动研判并写入本地数据库，然后通过本 API 提供查询能力。</p>
+        <div class="grid-2">
+          <div class="summary-card">
+            <strong>服务负责</strong>
+            <p>轮询 EASM、下载报告、自动研判、数据入库、提供 JSON 查询接口。</p>
+          </div>
+          <div class="summary-card">
+            <strong>下游负责</strong>
+            <p>定期查询已完成报告、分页读取明细、幂等写入自身系统并触发后续处置。</p>
+          </div>
+        </div>
+        <div class="callout warn">
+          <strong>数据边界</strong>
+          <p>API 查询的是本服务已经落库的数据，不会在请求时直接查询 EASM。EASM 已生成报告，不代表本 API 立即可见；还需等待后台完成下载、研判和入库。</p>
+        </div>
+        <div class="callout">
+          <strong>“报告概要”与“研判明细”是两个接口</strong>
+          <p><code>GET /reports/{report_id}</code> 返回报告元数据和数量统计；真正的逐条研判内容必须通过 <code>GET /reports/{report_id}/records</code> 分页获取。</p>
+        </div>
+      </section>
+
+      <section id="quick-start">
+        <h2>2. 快速接入</h2>
+        <h3>2.1 服务地址</h3>
+        <p>默认基础地址为：</p>
+        <pre><code>http://&lt;服务IP&gt;:8080</code></pre>
+        <p>例如服务部署在 170 主机、调用程序运行在 177 主机时：</p>
+        <pre><code>BASE_URL = "http://192.168.1.170:8080"</code></pre>
+        <p>实际使用时请替换为 170 主机的完整 IP。当前接口路径不包含 <code>/api/v1</code> 前缀。</p>
+
+        <h3>2.2 网络前提</h3>
+        <ul>
+          <li>170 主机上的服务需要监听可被 177 访问的地址，例如 <code>0.0.0.0:8080</code>，不能仅监听 <code>127.0.0.1</code>。</li>
+          <li>170 主机防火墙或网络 ACL 应允许 177 访问 TCP 8080。</li>
+          <li>如果服务运行在 Docker 中，需要将容器端口映射到宿主机，例如 <code>8080:8080</code>。</li>
+        </ul>
+
+        <h3>2.3 Python 环境</h3>
+        <pre><code>python -m pip install requests</code></pre>
+
+        <h3>2.4 公共配置</h3>
+        <pre><code>import requests
+
+BASE_URL = "http://192.168.1.170:8080"  # 替换为实际服务地址
+TOKEN = "请填写 DOWNSTREAM_API_TOKEN"
+
+HEADERS = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Accept": "application/json",
+}
+TIMEOUT = 30</code></pre>
+
+        <h3>2.5 最小可用调用</h3>
+        <pre><code># 1. 检查 HTTP 服务是否存活（不需要 Token）
+health_response = requests.get(f"{BASE_URL}/health", timeout=TIMEOUT)
+health_response.raise_for_status()
+print(health_response.json())
+
+# 2. 查询最新一条已完成报告
+report_response = requests.get(
+    f"{BASE_URL}/reports",
+    headers=HEADERS,
+    params={"processing_status": "completed", "limit": 1, "offset": 0},
+    timeout=TIMEOUT,
+)
+report_response.raise_for_status()
+items = report_response.json()["items"]
+
+if not items:
+    print("当前没有处理完成的报告")
+else:
+    report_id = items[0]["id"]
+    print("最新报告 ID：", report_id)</code></pre>
+      </section>
+
+      <section id="workflow">
+        <h2>3. 推荐调用流程</h2>
+        <div class="flow">
+          <div class="flow-step"><strong>检查服务</strong><span>调用 <code>/health</code>，确认 177 可以连接 170。</span></div>
+          <div class="flow-step"><strong>发现报告</strong><span>查询 <code>completed</code> 报告，取得本地数字 <code>id</code>。</span></div>
+          <div class="flow-step"><strong>读取概要</strong><span>使用报告 <code>id</code> 获取元数据与数量统计。</span></div>
+          <div class="flow-step"><strong>分页拉取明细</strong><span>循环增加 <code>offset</code>，直至读取全部记录。</span></div>
+        </div>
+        <ol>
+          <li>调用 <code>GET /reports?processing_status=completed</code>，只消费研判完成的数据。</li>
+          <li>保存响应中的 <code>id</code> 和 <code>task_id</code>；后续 URL 使用数字 <code>id</code>。</li>
+          <li>调用 <code>GET /reports/{id}</code> 获取报告概要。</li>
+          <li>调用 <code>GET /reports/{id}/records</code> 分页读取逐条研判结果。</li>
+          <li>以下游已消费的 <code>task_id</code> 做幂等，避免重复导入。</li>
+        </ol>
+        <div class="callout danger">
+          <strong>不要混用两个 ID</strong>
+          <p><code>id</code> 是本服务数据库中的数字报告 ID，用于接口路径；<code>task_id</code> 是 EASM 任务 ID，适合用于跨系统关联和下游幂等。</p>
+        </div>
+      </section>
+
+      <section id="conventions">
+        <h2>4. 公共约定</h2>
+        <h3>4.1 鉴权</h3>
+        <p>除 <code>GET /health</code> 外，所有接口都要求 HTTP Bearer Token。服务端默认从环境变量 <code>DOWNSTREAM_API_TOKEN</code> 读取令牌。</p>
+        <pre><code>HEADERS = {
+    "Authorization": "Bearer &lt;DOWNSTREAM_API_TOKEN&gt;",
+    "Accept": "application/json",
+}</code></pre>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>情况</th><th>HTTP 状态</th><th>处理方式</th></tr></thead>
+            <tbody>
+              <tr><td>未携带、格式错误或 Token 不匹配</td><td><span class="status s4xx">401</span></td><td>检查 <code>Authorization: Bearer ...</code>，不要盲目重试。</td></tr>
+              <tr><td>服务端没有配置 Token</td><td><span class="status s5xx">503</span></td><td>由服务维护人员检查部署环境变量或 <code>api.auth_token_env</code> 配置。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>4.2 数据格式</h3>
+        <ul>
+          <li>请求和响应使用 JSON；<code>POST /admin/poll-now</code> 请求体为空。</li>
+          <li>时间字段为 ISO 8601 字符串；客户端应按时间解析，不要依赖固定长度或固定时区。</li>
+          <li>服务增加未知字段时，下游应忽略；枚举出现新值时，下游不应直接解析失败。</li>
+        </ul>
+
+        <h3>4.3 分页</h3>
+        <p>分页接口统一使用 <code>limit</code> 和 <code>offset</code>，响应统一包含：</p>
+        <pre><code>{
+  "items": [],
+  "total": 0,
+  "limit": 100,
+  "offset": 0
+}</code></pre>
+        <p>当累计获取数量达到 <code>total</code>，或者当前页 <code>items</code> 为空时结束分页。</p>
+
+        <h3>4.4 超时建议</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>接口类型</th><th>建议读取超时</th><th>原因</th></tr></thead>
+            <tbody>
+              <tr><td>普通查询接口</td><td>30 秒</td><td>只查询本地数据库。</td></tr>
+              <tr><td><code>POST /admin/poll-now</code></td><td>按单批处理耗时设置，建议数分钟以上</td><td>该接口会等待本次轮询、下载和研判函数返回。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <section id="endpoints">
+        <h2>5. 接口说明</h2>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>方法</th><th>路径</th><th>鉴权</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><span class="method get">GET</span></td><td><code>/health</code></td><td>否</td><td>检查 HTTP 服务进程是否可响应。</td></tr>
+              <tr><td><span class="method get">GET</span></td><td><code>/reports</code></td><td>是</td><td>分页查询报告列表。</td></tr>
+              <tr><td><span class="method get">GET</span></td><td><code>/reports/{report_id}</code></td><td>是</td><td>查询报告概要和研判数量统计。</td></tr>
+              <tr><td><span class="method get">GET</span></td><td><code>/reports/{report_id}/records</code></td><td>是</td><td>分页查询逐条研判明细。</td></tr>
+              <tr><td><span class="method get">GET</span></td><td><code>/reports/{report_id}/stats</code></td><td>是</td><td>仅查询报告统计。</td></tr>
+              <tr><td><span class="method post">POST</span></td><td><code>/admin/poll-now</code></td><td>是</td><td>立即触发一次 EASM 轮询和处理。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <article class="endpoint" id="health">
+          <div class="endpoint-title">
+            <span class="method get">GET</span>
+            <span class="path">/health</span>
+            <span class="auth-tag no-auth">无需鉴权</span>
+            <h3>健康检查</h3>
+          </div>
+          <p>确认 HTTP 服务进程是否能够响应。</p>
+          <h4>Python 请求</h4>
+          <pre><code>response = requests.get(f"{BASE_URL}/health", timeout=TIMEOUT)
+response.raise_for_status()
+health = response.json()
+print(health)</code></pre>
+          <h4>成功响应 · 200</h4>
+          <pre><code>{
+  "status": "ok",
+  "worker_enabled": true,
+  "version": "0.1.0"
+}</code></pre>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>status</code></td><td>string</td><td>当前实现固定为 <code>ok</code>，表示 HTTP 进程可响应。</td></tr>
+                <tr><td><code>worker_enabled</code></td><td>boolean</td><td>是否启用后台轮询线程；不表示最近一次轮询成功。</td></tr>
+                <tr><td><code>version</code></td><td>string</td><td>服务版本。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warn">
+            <strong>健康检查不等于业务正常</strong>
+            <p>该接口不会检查 EASM 网络、模型接口、Token、最近一次任务和数据库报告数量。业务状态应结合报告列表与失败报告查询判断。</p>
+          </div>
+        </article>
+
+        <article class="endpoint" id="report-list">
+          <div class="endpoint-title">
+            <span class="method get">GET</span>
+            <span class="path">/reports</span>
+            <span class="auth-tag">Bearer Token</span>
+            <h3>分页查询报告列表</h3>
+          </div>
+          <p>用于发现本服务已经入库的报告。默认按 <code>source_created_at</code> 倒序；该字段为空时使用本地 <code>created_at</code>。</p>
+          <h4>Query 参数</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>约束</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>limit</code></td><td>integer</td><td>否</td><td>50</td><td>1–500</td><td>本页返回条数。</td></tr>
+                <tr><td><code>offset</code></td><td>integer</td><td>否</td><td>0</td><td>≥ 0</td><td>跳过的记录数。</td></tr>
+                <tr><td><code>processing_status</code></td><td>string</td><td>否</td><td>—</td><td>精确匹配</td><td>按本服务处理状态筛选。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h4>处理状态</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>值</th><th>含义</th></tr></thead>
+              <tbody>
+                <tr><td><code>pending</code></td><td>已发现或入库，尚未开始处理。</td></tr>
+                <tr><td><code>downloaded</code></td><td>已下载原始 Excel，尚未完成研判。</td></tr>
+                <tr><td><code>processing</code></td><td>正在运行研判。</td></tr>
+                <tr><td><code>completed</code></td><td>研判完成且已成功入库，推荐下游只消费此状态。</td></tr>
+                <tr><td><code>failed</code></td><td>本次研判失败，原因见 <code>processing_error</code>。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h4>Python 请求：最新一条已完成报告</h4>
+          <pre><code>response = requests.get(
+    f"{BASE_URL}/reports",
+    headers=HEADERS,
+    params={
+        "processing_status": "completed",
+        "limit": 1,
+        "offset": 0,
+    },
+    timeout=TIMEOUT,
+)
+response.raise_for_status()
+page = response.json()
+
+if page["items"]:
+    latest_report = page["items"][0]
+    report_id = latest_report["id"]
+    print(report_id, latest_report["task_id"])</code></pre>
+          <h4>成功响应 · 200</h4>
+          <pre><code>{
+  "items": [
+    {
+      "id": 12,
+      "task_id": "6a7922feac902272452ca33e",
+      "report_type": "sensitive_information",
+      "report_perspective": "detail",
+      "organization_id": "org-001",
+      "organization_name": "示例组织",
+      "report_filename": "示例组织_数据泄露明细.xlsx",
+      "report_filetype": "xlsx",
+      "export_status": "success",
+      "export_progress": "100",
+      "is_downloadable": 1,
+      "source_created_at": "2026-09-02T01:00:00+00:00",
+      "report_generated_at": "2026-09-02T01:05:00+00:00",
+      "downloaded_at": "2026-09-02T01:06:00+00:00",
+      "source_file_path": "/var/lib/easm-triage/raw/.../report.xlsx",
+      "source_sha256": "&lt;sha256&gt;",
+      "processing_status": "completed",
+      "processing_started_at": "2026-09-02T01:06:02+00:00",
+      "processing_finished_at": "2026-09-02T01:08:13+00:00",
+      "processing_error": null,
+      "created_at": "2026-09-02T01:00:02+00:00",
+      "updated_at": "2026-09-02T01:08:13+00:00"
+    }
+  ],
+  "total": 1,
+  "limit": 1,
+  "offset": 0
+}</code></pre>
+        </article>
+
+        <article class="endpoint" id="report-detail">
+          <div class="endpoint-title">
+            <span class="method get">GET</span>
+            <span class="path">/reports/{report_id}</span>
+            <span class="auth-tag">Bearer Token</span>
+            <h3>查询报告概要</h3>
+          </div>
+          <p>返回单条报告的全部元数据，并增加研判数量统计。该接口不返回逐条研判记录。</p>
+          <h4>Path 参数</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>说明</th></tr></thead>
+              <tbody><tr><td><code>report_id</code></td><td>integer</td><td>是</td><td><code>/reports</code> 返回的本地数字 <code>id</code>。</td></tr></tbody>
+            </table>
+          </div>
+          <h4>Python 请求</h4>
+          <pre><code>report_id = 12
+response = requests.get(
+    f"{BASE_URL}/reports/{report_id}",
+    headers=HEADERS,
+    timeout=TIMEOUT,
+)
+response.raise_for_status()
+report = response.json()</code></pre>
+          <h4>成功响应 · 200（节选）</h4>
+          <pre><code>{
+  "id": 12,
+  "task_id": "6a7922feac902272452ca33e",
+  "processing_status": "completed",
+  "processing_error": null,
+  "triage_counts": {
+    "total": 881,
+    "verdicts": {
+      "likely_true": 96,
+      "needs_review": 124,
+      "false_positive": 661
+    },
+    "risk_levels": {
+      "critical": 2,
+      "high": 41,
+      "medium": 88,
+      "low": 574,
+      "info": 176
+    }
+  }
+}</code></pre>
+        </article>
+
+        <article class="endpoint" id="records">
+          <div class="endpoint-title">
+            <span class="method get">GET</span>
+            <span class="path">/reports/{report_id}/records</span>
+            <span class="auth-tag">Bearer Token</span>
+            <h3>分页查询研判明细</h3>
+          </div>
+          <p>返回报告内的逐条研判记录。结果按 <code>priority_score</code> 降序、记录 <code>id</code> 升序排列；多个过滤条件之间是 AND 关系。</p>
+          <h4>Query 参数</h4>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>参数</th><th>类型</th><th>必填</th><th>默认值</th><th>约束</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>limit</code></td><td>integer</td><td>否</td><td>100</td><td>1–1000</td><td>本页返回条数。</td></tr>
+                <tr><td><code>offset</code></td><td>integer</td><td>否</td><td>0</td><td>≥ 0</td><td>跳过的记录数。</td></tr>
+                <tr><td><code>risk_level</code></td><td>string</td><td>否</td><td>—</td><td>精确匹配</td><td>风险级别。</td></tr>
+                <tr><td><code>verdict</code></td><td>string</td><td>否</td><td>—</td><td>精确匹配</td><td>研判结论，对应 <code>triage_verdict</code>。</td></tr>
+                <tr><td><code>asset_type</code></td><td>string</td><td>否</td><td>—</td><td>精确匹配</td><td>资产类型。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <h4>Python 请求：分页读取全部明细</h4>
+          <pre><code>def get_all_records(report_id: int) -&gt; list[dict]:
+    records = []
+    offset = 0
+    page_size = 1000
+
+    while True:
+        response = requests.get(
+            f"{BASE_URL}/reports/{report_id}/records",
+            headers=HEADERS,
+            params={"limit": page_size, "offset": offset},
+            timeout=TIMEOUT,
+        )
+        response.raise_for_status()
+        page = response.json()
+        items = page["items"]
+        records.extend(items)
+
+        if len(records) &gt;= page["total"] or not items:
+            break
+        offset += len(items)
+
+    return records</code></pre>
+          <h4>Python 请求：按条件过滤</h4>
+          <pre><code>response = requests.get(
+    f"{BASE_URL}/reports/{report_id}/records",
+    headers=HEADERS,
+    params={
+        "verdict": "likely_true",
+        "asset_type": "credential",
+        "limit": 100,
+        "offset": 0,
+    },
+    timeout=TIMEOUT,
+)
+response.raise_for_status()
+page = response.json()</code></pre>
+          <h4>成功响应 · 200</h4>
+          <pre><code>{
+  "items": [
+    {
+      "id": 1001,
+      "report_id": 12,
+      "source_sheet": "登录凭证泄露",
+      "source_row_number": 27,
+      "asset_type": "credential",
+      "triage_verdict": "likely_true",
+      "risk_level": "high",
+      "confidence": 88,
+      "reason_codes": "CRED_SUPPLIER_OR_SSO,SECRET_PATTERN_HIT",
+      "reason_detail": "疑似供应商或单点登录凭证，建议立即核验并轮换。",
+      "normalized_asset": "https://supplier.example.com/login|user@example.com",
+      "action": "核验、禁用或轮换凭证，检查相关登录和访问日志",
+      "priority_score": 88,
+      "analyst_note": "未确认真实登录成功，需由授权人员核验",
+      "created_at": "2026-09-02T01:08:13+00:00"
+    }
+  ],
+  "total": 1,
+  "limit": 100,
+  "offset": 0
+}</code></pre>
+          <div class="callout warn">
+            <strong>“高风险及以上”需要拆分查询</strong>
+            <p>当前接口不支持风险级别范围比较。可分别查询 <code>critical</code> 和 <code>high</code>，或者不传 <code>risk_level</code> 后在下游自行筛选。</p>
+          </div>
+          <div class="callout danger">
+            <strong>不返回原始敏感数据</strong>
+            <p>该接口默认不返回 <code>raw_data</code>。当前版本也不提供原始 Excel 下载接口；下游不得把 <code>source_file_path</code> 当作下载地址。</p>
+          </div>
+        </article>
+
+        <article class="endpoint" id="stats">
+          <div class="endpoint-title">
+            <span class="method get">GET</span>
+            <span class="path">/reports/{report_id}/stats</span>
+            <span class="auth-tag">Bearer Token</span>
+            <h3>查询报告统计</h3>
+          </div>
+          <p>只返回研判记录总数、结论分布和风险等级分布；内容与报告概要中的 <code>triage_counts</code> 相同。</p>
+          <h4>Python 请求</h4>
+          <pre><code>response = requests.get(
+    f"{BASE_URL}/reports/{report_id}/stats",
+    headers=HEADERS,
+    timeout=TIMEOUT,
+)
+response.raise_for_status()
+stats = response.json()</code></pre>
+          <h4>成功响应 · 200</h4>
+          <pre><code>{
+  "total": 881,
+  "verdicts": {
+    "likely_true": 96,
+    "needs_review": 124,
+    "false_positive": 661
+  },
+  "risk_levels": {
+    "critical": 2,
+    "high": 41,
+    "medium": 88,
+    "low": 574,
+    "info": 176
+  }
+}</code></pre>
+          <p>某个分类数量为 0 时，服务可能不返回该分类键；下游读取时应使用 <code>dict.get(key, 0)</code>。</p>
+        </article>
+
+        <article class="endpoint" id="poll-now">
+          <div class="endpoint-title">
+            <span class="method post">POST</span>
+            <span class="path">/admin/poll-now</span>
+            <span class="auth-tag">Bearer Token</span>
+            <h3>立即触发一次轮询</h3>
+          </div>
+          <p>立即从 EASM 查询、下载并处理符合条件的报告。请求体为空，接口会等待本次轮询函数返回。</p>
+          <h4>Python 请求</h4>
+          <pre><code>response = requests.post(
+    f"{BASE_URL}/admin/poll-now",
+    headers=HEADERS,
+    timeout=600,  # 按实际单批处理时间调整
+)
+response.raise_for_status()
+result = response.json()
+
+if result["failed"] &gt; 0:
+    print("本次存在处理失败的报告：", result["failed"])</code></pre>
+          <h4>成功响应 · 200</h4>
+          <pre><code>{
+  "discovered": 3,
+  "processed": 2,
+  "failed": 1,
+  "skipped": 0,
+  "message": null
+}</code></pre>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>discovered</code></td><td>integer</td><td>本次筛选出的报告数，不等于首次发现数。</td></tr>
+                <tr><td><code>processed</code></td><td>integer</td><td>成功完成下载、研判和入库的报告数。</td></tr>
+                <tr><td><code>failed</code></td><td>integer</td><td>本次处理失败的报告数。</td></tr>
+                <tr><td><code>skipped</code></td><td>integer</td><td>已完成、不可下载、状态不符或无需重试的报告数。</td></tr>
+                <tr><td><code>message</code></td><td>string / null</td><td>额外信息；已有轮询执行时可能为 <code>poll already running</code>。</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="callout warn">
+            <strong>HTTP 200 不代表全部处理成功</strong>
+            <p>必须继续检查响应中的 <code>failed</code>。当其大于 0 时，通过 <code>/reports?processing_status=failed</code> 查询失败报告及 <code>processing_error</code>。</p>
+          </div>
+        </article>
+      </section>
+
+      <section id="data-model">
+        <h2>6. 字段说明</h2>
+        <h3>6.1 报告字段</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>integer</td><td>本服务数据库报告 ID；后续接口路径使用该值。</td></tr>
+              <tr><td><code>task_id</code></td><td>string</td><td>EASM 任务 ID；用于跨系统关联和下游幂等。</td></tr>
+              <tr><td><code>report_type</code></td><td>string / null</td><td>EASM 报告类型。</td></tr>
+              <tr><td><code>report_perspective</code></td><td>string / null</td><td>EASM 报告视角。</td></tr>
+              <tr><td><code>organization_id</code></td><td>string / null</td><td>组织 ID。</td></tr>
+              <tr><td><code>organization_name</code></td><td>string / null</td><td>组织名称。</td></tr>
+              <tr><td><code>report_filename</code></td><td>string / null</td><td>EASM 报告文件名。</td></tr>
+              <tr><td><code>report_filetype</code></td><td>string / null</td><td>EASM 返回的文件类型。</td></tr>
+              <tr><td><code>export_status</code></td><td>string</td><td>EASM 导出状态。</td></tr>
+              <tr><td><code>export_progress</code></td><td>string / null</td><td>EASM 导出进度原值。</td></tr>
+              <tr><td><code>is_downloadable</code></td><td>integer</td><td><code>1</code> 表示可下载，<code>0</code> 表示不可下载。</td></tr>
+              <tr><td><code>source_created_at</code></td><td>string / null</td><td>EASM 报告创建时间。</td></tr>
+              <tr><td><code>report_generated_at</code></td><td>string / null</td><td>EASM 报告生成时间。</td></tr>
+              <tr><td><code>downloaded_at</code></td><td>string / null</td><td>本服务下载原始文件的时间。</td></tr>
+              <tr><td><code>source_file_path</code></td><td>string / null</td><td>170 服务端内部文件路径；下游不得依赖或直接访问。</td></tr>
+              <tr><td><code>source_sha256</code></td><td>string / null</td><td>原始 Excel 文件 SHA-256。</td></tr>
+              <tr><td><code>processing_status</code></td><td>string</td><td>本服务处理状态。</td></tr>
+              <tr><td><code>processing_started_at</code></td><td>string / null</td><td>研判开始时间。</td></tr>
+              <tr><td><code>processing_finished_at</code></td><td>string / null</td><td>研判结束时间。</td></tr>
+              <tr><td><code>processing_error</code></td><td>string / null</td><td>失败原因；成功时为 <code>null</code>。</td></tr>
+              <tr><td><code>created_at</code></td><td>string</td><td>本地首次入库时间。</td></tr>
+              <tr><td><code>updated_at</code></td><td>string</td><td>本地最后更新时间。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>6.2 研判记录字段</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>字段</th><th>类型</th><th>说明</th></tr></thead>
+            <tbody>
+              <tr><td><code>id</code></td><td>integer</td><td>本地研判记录 ID。</td></tr>
+              <tr><td><code>report_id</code></td><td>integer</td><td>所属本地报告 ID。</td></tr>
+              <tr><td><code>source_sheet</code></td><td>string / null</td><td>原始 Excel 工作表名称。</td></tr>
+              <tr><td><code>source_row_number</code></td><td>integer / null</td><td>原始 Excel 行号。</td></tr>
+              <tr><td><code>asset_type</code></td><td>string / null</td><td>资产类型，例如 <code>credential</code>、<code>code</code>；以实际数据为准。</td></tr>
+              <tr><td><code>triage_verdict</code></td><td>string / null</td><td>研判结论。</td></tr>
+              <tr><td><code>risk_level</code></td><td>string / null</td><td>风险级别。</td></tr>
+              <tr><td><code>confidence</code></td><td>integer / null</td><td>研判置信度，通常为 0–100。</td></tr>
+              <tr><td><code>reason_codes</code></td><td>string / null</td><td>研判原因码，通常为逗号分隔文本。</td></tr>
+              <tr><td><code>reason_detail</code></td><td>string / null</td><td>研判原因说明。</td></tr>
+              <tr><td><code>normalized_asset</code></td><td>string / null</td><td>归一化后的资产标识。</td></tr>
+              <tr><td><code>action</code></td><td>string / null</td><td>建议处置动作。</td></tr>
+              <tr><td><code>priority_score</code></td><td>integer / null</td><td>优先级分数，也是默认排序依据之一。</td></tr>
+              <tr><td><code>analyst_note</code></td><td>string / null</td><td>分析备注。</td></tr>
+              <tr><td><code>created_at</code></td><td>string</td><td>记录入库时间。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>6.3 常见研判枚举</h3>
+        <div class="grid-2">
+          <div class="field-group">
+            <h4><code>triage_verdict</code></h4>
+            <ul>
+              <li><code>true_positive</code>：高度确认或明确属于真实风险。</li>
+              <li><code>likely_true</code>：疑似真实风险，建议优先核验。</li>
+              <li><code>needs_review</code>：信息不足或处于边界，需要人工复核。</li>
+              <li><code>low_value</code>：价值较低，通常不是优先处置项。</li>
+              <li><code>false_positive</code>：误报或不构成有效风险。</li>
+            </ul>
+          </div>
+          <div class="field-group">
+            <h4><code>risk_level</code></h4>
+            <ul>
+              <li><code>critical</code>：严重</li>
+              <li><code>high</code>：高</li>
+              <li><code>medium</code>：中</li>
+              <li><code>low</code>：低</li>
+              <li><code>info</code>：信息</li>
+            </ul>
+          </div>
+        </div>
+        <p>以上是当前常见值，不应在客户端写成封闭枚举；出现未知值时应保留原值并继续处理。</p>
+      </section>
+
+      <section id="errors">
+        <h2>7. 错误处理</h2>
+        <p>错误通常采用 FastAPI 标准 JSON 格式：</p>
+        <pre><code>{
+  "detail": "report not found"
+}</code></pre>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>HTTP 状态</th><th>常见场景</th><th>下游处理建议</th></tr></thead>
+            <tbody>
+              <tr><td><span class="status s2xx">200</span></td><td>请求成功</td><td>读取响应；轮询接口还需检查 <code>failed</code>。</td></tr>
+              <tr><td><span class="status s4xx">401</span></td><td>Token 缺失或错误</td><td>检查鉴权配置，不要自动高频重试。</td></tr>
+              <tr><td><span class="status s4xx">404</span></td><td><code>report_id</code> 不存在</td><td>重新查询报告列表，确认使用的是本地数字 <code>id</code>。</td></tr>
+              <tr><td><span class="status s4xx">422</span></td><td>参数类型或范围错误</td><td>检查 <code>limit</code>、<code>offset</code> 和 <code>report_id</code>。</td></tr>
+              <tr><td><span class="status s5xx">503</span></td><td>服务端没有配置下游 Token</td><td>联系服务维护人员检查部署配置。</td></tr>
+              <tr><td><span class="status s5xx">500</span></td><td>服务内部异常</td><td>记录请求时间、路径和响应内容，联系维护人员。</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <h3>Python 统一错误处理</h3>
+        <pre><code>import requests
+
+try:
+    response = requests.get(
+        f"{BASE_URL}/reports",
+        headers=HEADERS,
+        params={"processing_status": "completed"},
+        timeout=TIMEOUT,
+    )
+    response.raise_for_status()
+    data = response.json()
+except requests.Timeout:
+    print("请求超时")
+except requests.ConnectionError as exc:
+    print("无法连接 170 服务：", exc)
+except requests.HTTPError as exc:
+    print("HTTP 请求失败：", exc.response.status_code, exc.response.text)
+except ValueError:
+    print("服务返回的内容不是合法 JSON")</code></pre>
+      </section>
+
+      <section id="sync">
+        <h2>8. 同步与幂等建议</h2>
+        <h3>8.1 只消费已完成报告</h3>
+        <p>下游定期查询 <code>processing_status=completed</code>，并以 <code>task_id</code> 判断是否已处理。不要只依赖分页位置：新报告插入列表头部后，固定 <code>offset</code> 可能发生分页漂移。</p>
+
+        <h3>8.2 推荐幂等键</h3>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>对象</th><th>推荐键</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td>报告</td><td><code>task_id</code></td><td>跨 EASM、本服务和下游系统稳定关联。</td></tr>
+              <tr><td>研判记录</td><td><code>report_id + record.id</code></td><td>避免同一报告的明细重复写入。</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3>8.3 失败报告</h3>
+        <pre><code>response = requests.get(
+    f"{BASE_URL}/reports",
+    headers=HEADERS,
+    params={"processing_status": "failed", "limit": 100, "offset": 0},
+    timeout=TIMEOUT,
+)
+response.raise_for_status()
+
+for report in response.json()["items"]:
+    print(report["task_id"], report["processing_error"])</code></pre>
+        <p>下游不应直接修改 SQLite 触发重试。若服务端启用 <code>retry_failed: true</code>，后台会按配置重试；维护人员也可以调用 <code>POST /admin/poll-now</code>。</p>
+      </section>
+
+      <section id="complete-example">
+        <h2>9. 完整 Python 示例</h2>
+        <p>以下代码完成健康检查、发现最新已完成报告、读取报告概要和统计、分页获取全部研判明细，并保存为 JSON 文件。</p>
+        <pre><code>from __future__ import annotations
+
+import json
+from pathlib import Path
+
+import requests
+
+
+# ===== 请填写 =====
+BASE_URL = "http://192.168.1.170:8080"
+TOKEN = "请填写 DOWNSTREAM_API_TOKEN"
+# ==================
+
+HEADERS = {
+    "Authorization": f"Bearer {TOKEN}",
+    "Accept": "application/json",
+}
+TIMEOUT = 30
+
+
+def get_json(path: str, params: dict | None = None) -&gt; dict:
+    response = requests.get(
+        f"{BASE_URL.rstrip('/')}{path}",
+        headers=HEADERS,
+        params=params,
+        timeout=TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+def get_all_records(report_id: int) -&gt; list[dict]:
+    records = []
+    offset = 0
+    page_size = 1000
+
+    while True:
+        page = get_json(
+            f"/reports/{report_id}/records",
+            {"limit": page_size, "offset": offset},
+        )
+        items = page["items"]
+        records.extend(items)
+        print(f"已获取 {len(records)} / {page['total']} 条研判记录")
+
+        if len(records) &gt;= page["total"] or not items:
+            return records
+        offset += len(items)
+
+
+def main() -&gt; None:
+    # /health 不需要鉴权
+    health_response = requests.get(f"{BASE_URL}/health", timeout=TIMEOUT)
+    health_response.raise_for_status()
+    print("服务状态：", health_response.json())
+
+    report_page = get_json(
+        "/reports",
+        {"processing_status": "completed", "limit": 1, "offset": 0},
+    )
+    if not report_page["items"]:
+        print("当前没有处理完成的报告")
+        return
+
+    latest = report_page["items"][0]
+    report_id = latest["id"]
+
+    report = get_json(f"/reports/{report_id}")
+    stats = get_json(f"/reports/{report_id}/stats")
+    records = get_all_records(report_id)
+
+    result = {
+        "report": report,
+        "stats": stats,
+        "records": records,
+    }
+    output = Path(f"report_{report_id}.json")
+    output.write_text(
+        json.dumps(result, ensure_ascii=False, indent=2),
+        encoding="utf-8",
+    )
+    print("报告已保存：", output.resolve())
+
+
+if __name__ == "__main__":
+    try:
+        main()
+    except requests.RequestException as exc:
+        raise SystemExit(f"API 请求失败：{exc}")</code></pre>
+      </section>
+
+      <section id="security">
+        <h2>10. 安全建议与当前限制</h2>
+        <h3>10.1 安全建议</h3>
+        <ul>
+          <li>API 只通过内网或 HTTPS 暴露，不要把 8080 端口直接开放到公网。</li>
+          <li>为下游 API 使用独立 Token，并定期轮换；不要把 Token 写入 Git、URL 参数或日志。</li>
+          <li>限制 <code>/admin/poll-now</code> 的调用来源，只允许运维或调度系统访问。</li>
+          <li>不要让 177 直接读取 170 的 SQLite、<code>raw</code> 或 <code>processed</code> 目录。</li>
+          <li>优先使用研判后的字段，避免扩大原始敏感信息的传播范围。</li>
+        </ul>
+
+        <h3>10.2 当前版本限制</h3>
+        <ul>
+          <li>只提供 JSON 查询和立即轮询，不提供原始 Excel 下载接口。</li>
+          <li>数据库适配器当前只支持 SQLite。</li>
+          <li>过滤条件只支持精确匹配，不支持模糊查询、时间范围和风险等级比较。</li>
+          <li>分页方式为 <code>limit + offset</code>；持续写入期间需要结合 <code>task_id</code> 做幂等。</li>
+          <li><code>/health</code> 只表示 HTTP 服务可响应，不代表后台任务和模型处理正常。</li>
+        </ul>
+      </section>
+
+      <section id="openapi">
+        <h2>OpenAPI 文档入口</h2>
+        <p>服务基于 FastAPI，默认提供以下自动文档。是否允许从生产网络访问，由实际网络策略决定：</p>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>路径</th><th>用途</th></tr></thead>
+            <tbody>
+              <tr><td><code>/docs</code></td><td>Swagger UI 交互式文档。</td></tr>
+              <tr><td><code>/redoc</code></td><td>ReDoc 阅读文档。</td></tr>
+              <tr><td><code>/openapi.json</code></td><td>OpenAPI 结构化定义。</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <footer class="footer">EASM 自动研判服务 · 下游 REST API · 服务版本 0.1.0</footer>
+
+  <script>
+    document.querySelectorAll("pre").forEach((pre) => {
+      const wrapper = document.createElement("div");
+      wrapper.className = "code-wrap";
+      pre.parentNode.insertBefore(wrapper, pre);
+      wrapper.appendChild(pre);
+
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "copy-button";
+      button.textContent = "复制";
+      button.addEventListener("click", async () => {
+        try {
+          await navigator.clipboard.writeText(pre.innerText);
+          button.textContent = "已复制";
+          window.setTimeout(() => { button.textContent = "复制"; }, 1200);
+        } catch (_) {
+          button.textContent = "复制失败";
+        }
+      });
+      wrapper.appendChild(button);
+    });
+  </script>
+</body>
+</html>
